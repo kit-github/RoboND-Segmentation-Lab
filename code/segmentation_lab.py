@@ -38,10 +38,9 @@ from tensorflow import image
 from utils import scoring_utils
 from utils.separable_conv2d import SeparableConv2DKeras, BilinearUpSampling2D
 from utils import data_iterator
-#from utils import plotting_tools 
+from utils import plotting_tools 
 from utils import model_tools
 
-ipdb.set_trace()
 
 # ## FCN Layers<a id='fcn'></a>
 # In the Classroom, we discussed the different layers that constitute a fully convolutional network. The following code will introduce you to the functions that you will be using to build out your model.
@@ -119,7 +118,7 @@ def decoder_block(small_ip_layer, large_ip_layer, filters):
     output = bilinear_upsample(small_ip_layer)
     # TODO Concatenate the upsampled and large input layers using layers.concatenate
     print ('db_output_{}  large_ip_{}'.format(output.get_shape().as_list(), large_ip_layer.get_shape().as_list()))
-    output = layers.concatenate(axis=-1)([output, large_ip_layer])
+    output = layers.concatenate([output, large_ip_layer], axis=-1)
     # TODO Add some number of separable convolution layers
     output_layer = separable_conv2d_batchnorm(output, filters)
     return output_layer
@@ -149,19 +148,20 @@ def fcn_model(inputs, num_classes):
         outputs[i+1] = encoder_block(outputs[i], filter, strides[0])
         print ('encoder_{} shape:{}'.format(i, outputs[i+1].get_shape().as_list()))
 
-    ipdb.set_trace()
-
     # TODO Add 1x1 Convolution layer using conv2d_batchnorm().
     final_output = conv2d_batchnorm(outputs[-1], 128, kernel_size=1)
     # TODO: Add the same number of Decoder Blocks as the number of Encoder Blocks
+
+    # The advise was to concatenate the higher blocks not all.
+    # 3rd and fifth block
     decoded_output = final_output
     reversed_arr = list(range(len(filters)))[::-1]
     for i in reversed_arr:
         print ('decoder_{}'.format(i))
-        ipdb.set_trace()
         decoded_output = decoder_block(decoded_output, outputs[i], filters[i])
-    
-    x = decoder_block(decoded_output,inputs,filters[0])
+
+    x = decoded_output
+    # x = decoder_block(decoded_output,inputs,filters[0])
     # The function returns the output layer of your model. "x" is the final layer obtained from the last decoder_block()
     return layers.Conv2D(num_classes, 3, activation='softmax', padding='same')(x)
 
@@ -225,7 +225,7 @@ val_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
                                              data_folder=os.path.join('..', 'data', 'validation'),
                                              image_shape=image_shape)
 
-if 0:
+if 1:
     logger_cb = plotting_tools.LoggerPlotter()
     callbacks = [logger_cb]
 

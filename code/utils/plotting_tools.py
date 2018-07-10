@@ -30,10 +30,16 @@
 import os
 import glob
 import numpy as np
-import matplotlib.patches as mpatches 
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from tensorflow.contrib.keras.python import keras
 from scipy import misc
+
+if 0:
+    import faulthandler
+    faulthandler.enable()
 
 def make_dir_if_not_exist(path):
     if not os.path.exists(path):
