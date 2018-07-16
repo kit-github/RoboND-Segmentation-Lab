@@ -1,11 +1,10 @@
-
 # coding: utf-8
 
 # # Semantic Segmentation Lab
 # In this lab, you will build a deep learning network that locates a particular human target within an image.  The premise is that a quadcopter (simulated) is searching for a target, and then will follow the target once found.  It's not enough to simply say the target is present in the image in this case, but rather to know *where* in the image the target is, so that the copter can adjust its direction in order to follow.
-# 
+#
 # Consequently, an image classification network is not enough to solve the problem. Instead, a semantic segmentation network is needed so that the target can be specifically located within the image.
-# 
+#
 # You can click on any of the following to quickly jump to that part of this notebook:
 # 1. [Data Collection](#data)
 # 2. [FCN Layers](#fcn)
@@ -38,7 +37,7 @@ from tensorflow import image
 from utils import scoring_utils
 from utils.separable_conv2d import SeparableConv2DKeras, BilinearUpSampling2D
 from utils import data_iterator
-from utils import plotting_tools 
+from utils import plotting_tools
 from utils import model_tools
 
 
@@ -46,10 +45,10 @@ from utils import model_tools
 # In the Classroom, we discussed the different layers that constitute a fully convolutional network. The following code will introduce you to the functions that you will be using to build out your model.
 
 # ### Separable Convolutions
-# The Encoder for your FCN will essentially require separable convolution layers. Below we have implemented two functions - one which you can call upon to build out separable convolutions or regular convolutions. Each with batch normalization and with the ReLU activation function applied to the layers. 
-# 
+# The Encoder for your FCN will essentially require separable convolution layers. Below we have implemented two functions - one which you can call upon to build out separable convolutions or regular convolutions. Each with batch normalization and with the ReLU activation function applied to the layers.
+#
 # While we recommend the use of separable convolutions thanks to their advantages we covered in the Classroom, some of the helper code we will present for your model will require the use for regular convolutions. But we encourage you to try and experiment with each as well!
-# 
+#
 # The following will help you create the encoder block and the final model for your architecture.
 
 # In[2]:
@@ -58,15 +57,15 @@ from utils import model_tools
 def separable_conv2d_batchnorm(input_layer, filters, strides=1):
     output_layer = SeparableConv2DKeras(filters=filters, kernel_size=3, strides=strides,
                              padding='same', activation='relu')(input_layer)
-    
-    output_layer = layers.BatchNormalization()(output_layer) 
+
+    output_layer = layers.BatchNormalization()(output_layer)
     return output_layer
 
 def conv2d_batchnorm(input_layer, filters, kernel_size=3, strides=1):
-    output_layer = layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, 
+    output_layer = layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides,
                       padding='same', activation='relu')(input_layer)
-    
-    output_layer = layers.BatchNormalization()(output_layer) 
+
+    output_layer = layers.BatchNormalization()(output_layer)
     return output_layer
 
 
@@ -82,16 +81,16 @@ def bilinear_upsample(input_layer):
 
 
 # ## Build the Model<a id='build'></a>
-# In the following cells, we will cover how to build the model for the task at hand. 
-# 
+# In the following cells, we will cover how to build the model for the task at hand.
+#
 # - We will first create an Encoder Block, where you will create a separable convolution layer using an input layer and the size(depth) of the filters as your inputs.
 # - Next, you will create the Decoder Block, where you will create an upsampling layer using bilinear upsampling, followed by a layer concatentaion, and some separable convolution layers.
 # - Finally, you will combine the above two and create the model. In this step you will be able to experiment with different number of layers and filter sizes for each to build your model.
-# 
+#
 # Let's cover them individually below.
 
 # ### Encoder Block
-# Below you will create a separable convolution layer using the separable_conv2d_batchnorm() function. The `filters` parameter defines the size or depth of the output layer. For example, 32 or 64. 
+# Below you will create a separable convolution layer using the separable_conv2d_batchnorm() function. The `filters` parameter defines the size or depth of the output layer. For example, 32 or 64.
 
 # In[4]:
 
@@ -104,7 +103,7 @@ def encoder_block(input_layer, filters, strides):
 
 # ### Decoder Block
 # The decoder block, as covered in the Classroom, comprises of three steps -
-# 
+#
 # - A bilinear upsampling layer using the bilinear_upsample() function. The current recommended factor for upsampling is set to 2.
 # - A layer concatenation step. This step is similar to skip connections. You will concatenate the upsampled small_ip_layer and the large_ip_layer.
 # - Some (one or two) additional separable convolution layers to extract some more spatial information from prior layers.
@@ -113,7 +112,7 @@ def encoder_block(input_layer, filters, strides):
 
 
 def decoder_block(small_ip_layer, large_ip_layer, filters):
-    
+
     # TODO Upsample the small input layer using the bilinear_upsample() function.
     output = bilinear_upsample(small_ip_layer)
     # TODO Concatenate the upsampled and large input layers using layers.concatenate
@@ -125,9 +124,9 @@ def decoder_block(small_ip_layer, large_ip_layer, filters):
 
 
 # ### Model
-# 
-# Now that you have the encoder and decoder blocks ready, you can go ahead and build your model architecture! 
-# 
+#
+# Now that you have the encoder and decoder blocks ready, you can go ahead and build your model architecture!
+#
 # There are three steps to the following:
 # - Add encoder blocks to build out initial set of layers. This is similar to how you added regular convolutional layers in your CNN lab.
 # - Add 1x1 Convolution layer using conv2d_batchnorm() function. Remember that 1x1 Convolutions require a kernel and stride of 1.
@@ -137,8 +136,8 @@ def decoder_block(small_ip_layer, large_ip_layer, filters):
 
 
 def fcn_model(inputs, num_classes):
-    
-    # TODO Add Encoder Blocks. 
+
+    # TODO Add Encoder Blocks.
     # Remember that with each encoder layer, the depth of your model (the number of filters) increases.
     filters=[32,64,128,256]
     strides=[2]
@@ -191,15 +190,15 @@ output_layer = fcn_model(inputs, num_classes)
 # - **num_epochs**: number of times the entire training dataset gets propagated through the network.
 # - **steps_per_epoch**: number of batches of training images that go through the network in 1 epoch. We have provided you with a default value. One recommended value to try would be based on the total number of images in training dataset divided by the batch_size.
 # - **validation_steps**: number of batches of validation images that go through the network in 1 epoch. This is similar to steps_per_epoch, except validation_steps is for the validation dataset. We have provided you with a default value for this as well.
-# - **workers**: maximum number of processes to spin up. This can affect your training speed and is dependent on your hardware. We have provided a recommended value to work with. 
+# - **workers**: maximum number of processes to spin up. This can affect your training speed and is dependent on your hardware. We have provided a recommended value to work with.
 
 # In[15]:
 
 
-learning_rate = 0
-batch_size = 0
-num_epochs = 0
-steps_per_epoch = 200
+learning_rate = 0.01
+batch_size = 8
+num_epochs = 10
+steps_per_epoch = 100
 validation_steps = 50
 workers = 2
 
@@ -269,7 +268,7 @@ validation_path, output_path = model_tools.write_predictions_grade_set(model,run
 
 # take a look at predictions
 # validation_path = 'validation'
-im_files = plotting_tools.get_im_file_sample(run_number,validation_path) 
+im_files = plotting_tools.get_im_file_sample(run_number,validation_path)
 for i in range(3):
     im_tuple = plotting_tools.load_images(im_files[i])
     plotting_tools.show_images(im_tuple)
@@ -282,4 +281,3 @@ for i in range(3):
 
 
 scoring_utils.score_run(validation_path, output_path)
-

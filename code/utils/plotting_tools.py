@@ -36,8 +36,9 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from tensorflow.contrib.keras.python import keras
 from scipy import misc
+plt.ion()
 
-if 0:
+if 1:
     import faulthandler
     faulthandler.enable()
 
@@ -49,7 +50,7 @@ def show(im, x=5, y=5):
     plt.figure(figsize=(x,y))
     plt.imshow(im)
     plt.show()
-    
+
 def show_images(maybe_ims, x=4, y=4):
     if isinstance(maybe_ims, (list, tuple)):
         border = np.ones((maybe_ims[0].shape[0], 10, 3))
@@ -61,10 +62,10 @@ def show_images(maybe_ims, x=4, y=4):
     else:
         show(maybe_ims)
 
-# helpers for loading a few images from the grading data 
+# helpers for loading a few images from the grading data
 def get_im_files(path, subset_name):
     return sorted(glob.glob(os.path.join(path, subset_name, 'images', '*.jpeg')))
-                  
+
 def get_mask_files(path, subset_name):
     return sorted(glob.glob(os.path.join(path, subset_name, 'masks', '*.png')))
 
@@ -76,16 +77,16 @@ def get_im_file_sample(pred_run_name, subset_name, grading_data_dir_name=None,  
         path = os.path.join('..', 'data', grading_data_dir_name)
     else:
         path = os.path.join('..', 'data')
-    
-    ims = np.array(get_im_files(path, subset_name)) 
-    masks = np.array(get_mask_files(path, subset_name))  
-    
+
+    ims = np.array(get_im_files(path, subset_name))
+    masks = np.array(get_mask_files(path, subset_name))
+
     shuffed_inds = np.random.permutation(np.arange(masks.shape[0]))
 
     ims_subset = ims[shuffed_inds[:n_file_names]]
     masks_subset = masks[shuffed_inds[:n_file_names]]
     return list(zip(ims_subset, masks_subset))
-    
+
 def load_images(file_tuple):
     im = misc.imread(file_tuple[0])
     mask = misc.imread(file_tuple[1])
@@ -112,11 +113,11 @@ def train_val_curve(train_loss, val_loss=None):
     handles = [train_patch]
     if val_loss:
         val_line = plt.plot(val_loss, label='val_loss')
-        val_patch = mpatches.Patch(color='orange',label='val_loss') 
+        val_patch = mpatches.Patch(color='orange',label='val_loss')
         handles.append(val_patch)
-        
+
     plt.legend(handles=handles, loc=2)
-    plt.title('training curves') 
+    plt.title('training curves')
     plt.ylabel('loss')
     plt.xlabel('epochs')
     plt.show()
@@ -129,7 +130,7 @@ class LoggerPlotter(keras.callbacks.Callback):
     """
     def __init__(self):
         self.hist_dict = {'loss':[], 'val_loss':[]}
-        
+
     def on_epoch_begin(self, epoch, logs=None):
         self.seen = 0
         self.totals = {}
@@ -144,7 +145,7 @@ class LoggerPlotter(keras.callbacks.Callback):
                 self.totals[k] += v * batch_size
             else:
                 self.totals[k] = v * batch_size
-        
+
 
     def on_epoch_end(self, epoch, logs=None):
         if logs is not None:
@@ -152,7 +153,7 @@ class LoggerPlotter(keras.callbacks.Callback):
                 if k in self.totals:
                     # Make value available to next callbacks.
                     logs[k] = self.totals[k] / self.seen
-            
+
             self.hist_dict['loss'].append(logs['loss'])
             if 'val_loss' in self.params['metrics']:
                 self.hist_dict['val_loss'].append(logs['val_loss'])
