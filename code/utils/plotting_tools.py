@@ -37,6 +37,7 @@ import matplotlib.pyplot as plt
 from tensorflow.contrib.keras.python import keras
 from scipy import misc
 plt.ion()
+import ipdb
 
 if 1:
     import faulthandler
@@ -46,19 +47,22 @@ def make_dir_if_not_exist(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def show(im, x=5, y=5):
-    plt.figure(figsize=(x,y))
+def show(im, x=5, y=5, fig_id=None):
+    if fig_id is None:
+        plt.figure(figsize=(x,y))
+    else:
+        plt.figure(fig_id)
     plt.imshow(im)
     plt.show()
 
-def show_images(maybe_ims, x=4, y=4):
+def show_images(maybe_ims, x=4, y=4, fig_id=None):
     if isinstance(maybe_ims, (list, tuple)):
         border = np.ones((maybe_ims[0].shape[0], 10, 3))
         border = border.astype(np.uint8)
         new_im = maybe_ims[0]
         for i in maybe_ims[1:]:
             new_im = np.concatenate((new_im, border, i), axis=1)
-        show(new_im, len(maybe_ims)*x, y)
+        show(new_im, len(maybe_ims)*x, y, fig_id)
     else:
         show(maybe_ims)
 
@@ -73,6 +77,7 @@ def get_pred_files(subset_name):
     return sorted(glob.glob(os.path.join('..','data', 'runs', subset_name, '*.png')))
 
 def get_im_file_sample(pred_run_name, subset_name, grading_data_dir_name=None,  n_file_names=10):
+    ipdb.set_trace()
     if grading_data_dir_name:
         path = os.path.join('..', 'data', grading_data_dir_name)
     else:
@@ -107,7 +112,7 @@ def plot_keras_model(model, fig_name):
     keras.utils.vis_utils.plot_model(model, os.path.join(base_path, fig_name +'_with_shapes'), show_shapes=True)
 
 
-def train_val_curve(train_loss, val_loss=None):
+def train_val_curve(train_loss, val_loss=None, epoch=None, outdir=None):
     train_line = plt.plot(train_loss, label='train_loss')
     train_patch = mpatches.Patch(color='blue',label='train_loss')
     handles = [train_patch]
@@ -120,7 +125,16 @@ def train_val_curve(train_loss, val_loss=None):
     plt.title('training curves')
     plt.ylabel('loss')
     plt.xlabel('epochs')
+    plt.draw()
     plt.show()
+    if epoch is not None:
+        if outdir is not None:
+            plt_dir = '{}/plots'.format(outdir)
+            make_dir_if_not_exist(plt_dir)
+        else:
+            plt_dir = '.'
+        figname = '{}/epoch_{:03d}.png'.format(plt_dir, epoch)
+        plt.savefig(figname)
 
 # modified from the BaseLogger in file linked below
 # https://github.com/fchollet/keras/blob/master/keras/callbacks.py
@@ -128,8 +142,9 @@ class LoggerPlotter(keras.callbacks.Callback):
     """Callback that accumulates epoch averages of metrics.
     and plots train and validation curves on end of epoch
     """
-    def __init__(self):
+    def __init__(self, outdir='.'):
         self.hist_dict = {'loss':[], 'val_loss':[]}
+        self.outdir = outdir
 
     def on_epoch_begin(self, epoch, logs=None):
         self.seen = 0
@@ -157,6 +172,8 @@ class LoggerPlotter(keras.callbacks.Callback):
             self.hist_dict['loss'].append(logs['loss'])
             if 'val_loss' in self.params['metrics']:
                 self.hist_dict['val_loss'].append(logs['val_loss'])
-                train_val_curve(self.hist_dict['loss'], self.hist_dict['val_loss'])
+                train_val_curve(self.hist_dict['loss'], self.hist_dict['val_loss'],
+                                epoch=epoch, outdir=self.outdir)
             else:
-                train_val_curve(self.hist_dict['loss'])
+                train_val_curve(self.hist_dict['loss'], epoch=epoch,
+                                outdir=self.outdir)

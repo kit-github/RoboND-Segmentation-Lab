@@ -29,7 +29,7 @@
 
 import os
 import json
-from tensorflow.contrib.keras.python import keras 
+from tensorflow.contrib.keras.python import keras
 from scipy import misc
 from . import data_iterator
 import numpy as np
@@ -45,27 +45,27 @@ def save_network(your_model, your_weight_filename):
     weight_path = os.path.join('..', 'data', 'weights', your_weight_filename)
     config_path = os.path.join('..', 'data', 'weights', config_name)
     your_model_json = your_model.to_json()
-    
+
     with open(config_path, 'w') as file:
-        json.dump(your_model_json, file)  
-        
-    your_model.save_weights(weight_path) 
-        
-        
+        json.dump(your_model_json, file)
+
+    your_model.save_weights(weight_path)
+
+
 def load_network(your_weight_filename):
     config_name = 'config' + '_' + your_weight_filename
     weight_path = os.path.join('..', 'data', 'weights', your_weight_filename)
     config_path = os.path.join('..', 'data', 'weights', config_name)
-    
+
     if os.path.exists(config_path):
         with open(config_path, 'r') as file:
-            json_string = json.load(file)  
-            
+            json_string = json.load(file)
+
         your_model = keras.models.model_from_json(json_string)
-        
+
     else:
         raise ValueError('No config_yourmodel file found at {}'.format(config_path))
-        
+
     if os.path.exists(weight_path):
         your_model.load_weights(weight_path)
         return your_model
@@ -73,11 +73,13 @@ def load_network(your_weight_filename):
         raise ValueError('No weight file found at {}'.format(weight_path))
 
 
-def write_predictions_grade_set(model, run_number, validation_folder):
-    
+def write_predictions_grade_set(model, run_number, validation_folder, max_files=-1):
+
     validation_path = os.path.join('..', 'data', validation_folder)
     file_names = sorted(glob.glob(os.path.join(validation_path, 'images', '*.jpeg')))
 
+    if max_files>0:
+        filenames = filenames[0:max_files]
     output_path = os.path.join('..', 'data', 'runs', run_number)
     make_dir_if_not_exist(output_path)
     image_shape = model.layers[0].output_shape[1]

@@ -31,6 +31,7 @@ import numpy as np
 import glob
 import os
 from scipy import misc
+import ipdb
 
 def intersection_over_union(y_true, y_pred):
     """Computes the intersection over union of to arrays containing 1's and 0's
@@ -67,9 +68,14 @@ def intersection_over_union(y_true, y_pred):
         return intersection/union # + 1e-10
 
 
-def score_run(gt_dir, pred_dir):
+def score_run(gt_dir, pred_dir, max_files=-1):
+    ipdb.set_trace()
     gt_files = sorted(glob.glob(os.path.join(gt_dir, 'masks', '*.png')))
     pred_files = sorted(glob.glob(os.path.join(pred_dir, '*.png')))
+    if max_files>0:
+        gt_files = gt_files[0:maxfiles]
+        pred_files = pred_files[0:maxfiles]
+
     ious = [0,0,0]
     n_preds = len(gt_files)
 

@@ -139,7 +139,7 @@ def fcn_model(inputs, num_classes):
 
     # TODO Add Encoder Blocks.
     # Remember that with each encoder layer, the depth of your model (the number of filters) increases.
-    filters=[32,64,128,256]
+    filters=[16,32,64, 96, 128]
     strides=[2]
     outputs = [None]*(len(filters)+1)
     outputs[0] = inputs
@@ -195,10 +195,10 @@ output_layer = fcn_model(inputs, num_classes)
 # In[15]:
 
 
-learning_rate = 0.01
+learning_rate = 0.001
 batch_size = 8
-num_epochs = 10
-steps_per_epoch = 100
+num_epochs = 30
+steps_per_epoch = 500
 validation_steps = 50
 workers = 2
 
@@ -224,8 +224,11 @@ val_iter = data_iterator.BatchIteratorSimple(batch_size=batch_size,
                                              data_folder=os.path.join('..', 'data', 'validation'),
                                              image_shape=image_shape)
 
+run_number = 'run5'
+outdir = '/home/robond/RoboND-Segmentation-Lab/data/runs/{}'.format(run_number)
+
 if 1:
-    logger_cb = plotting_tools.LoggerPlotter()
+    logger_cb = plotting_tools.LoggerPlotter(outdir)
     callbacks = [logger_cb]
 
 model.fit_generator(train_iter,
@@ -240,7 +243,7 @@ model.fit_generator(train_iter,
 # In[ ]:
 
 # Save your trained model weights
-weight_file_name = 'model_weights'
+weight_file_name = 'model_weights_{}'.format(run_number)
 model_tools.save_network(model, weight_file_name)
 
 
@@ -258,8 +261,8 @@ model_tools.save_network(model, weight_file_name)
 # In[ ]:
 
 
+max_files = 2000
 # generate predictions, save in the runs, directory.
-run_number = 'run1'
 validation_path, output_path = model_tools.write_predictions_grade_set(model,run_number,'validation')
 
 
